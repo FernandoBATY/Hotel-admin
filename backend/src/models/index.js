@@ -1,0 +1,1 @@
+// Este archivo no se utiliza porque usamos PostgreSQL/CockroachDB directamente.

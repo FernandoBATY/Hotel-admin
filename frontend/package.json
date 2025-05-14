@@ -1,0 +1,12 @@
+{
+  "name": "hotel-reservation-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for the hotel reservation application",
+  "main": "src/App.js",
+  "scripts": {
+    "start": "npx serve public"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
