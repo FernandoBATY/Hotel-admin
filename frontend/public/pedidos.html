@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Pedidos a Habitación</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="btn small">← Volver al inicio</a>
+        <h1>Pedidos a Habitación</h1>
+        <table id="pedidosTable">
+            <thead>
+                <tr>
+                    <th>Pedido</th>
+                    <th>Cliente</th>
+                    <th>Habitación</th>
+                    <th>Fecha/Hora</th>
+                    <th>Estado</th>
+                    <th>Total</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="pedidosBody">
+                <!-- Las filas se llenan dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <template id="pedidoRowTemplate">
+        <tr>
+            <td class="pedido_id"></td>
+            <td class="cliente_nombre"></td>
+            <td class="habitacion_tipo"></td>
+            <td class="fecha_hora"></td>
+            <td class="estado"></td>
+            <td class="total"></td>
+            <td>
+                <button class="verBtn btn small">Ver Detalle</button>
+            </td>
+        </tr>
+    </template>
+
+    <script>
+        // NOTA: Cambia la URL y los campos según tu API real
+        const API_URL = 'http://localhost:3000/api/pedidos';
+        let pedidos = [];
+
+        function fetchPedidos() {
+            fetch(API_URL)
+                .then(res => res.json())
+                .then(data => {
+                    pedidos = data;
+                    renderPedidos();
+                });
+        }
+
+        function renderPedidos() {
+            const tbody = document.getElementById('pedidosBody');
+            tbody.innerHTML = '';
+            pedidos.forEach(pedido => {
+                const row = document.getElementById('pedidoRowTemplate').content.cloneNode(true);
+                row.querySelector('.pedido_id').textContent = pedido.pedido_id;
+                row.querySelector('.cliente_nombre').textContent = pedido.cliente_nombre || '';
+                row.querySelector('.habitacion_tipo').textContent = pedido.habitacion_tipo || '';
+                row.querySelector('.fecha_hora').textContent = pedido.fecha_hora || '';
+                row.querySelector('.estado').textContent = pedido.estado || '';
+                row.querySelector('.total').textContent = pedido.total || '';
+                row.querySelector('.verBtn').onclick = () => alert('Detalle de pedido no implementado');
+                tbody.appendChild(row);
+            });
+        }
+
+        window.onload = fetchPedidos;
+    </script>
+</body>
+</html>

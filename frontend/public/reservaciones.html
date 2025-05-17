@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reservaciones de Clientes</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="btn small">← Volver al inicio</a>
+        <h1>Reservaciones de Clientes</h1>
+        <table id="reservationsTable">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Correo</th>
+                    <th>Habitación</th>
+                    <th>Precio</th>
+                    <th>Entrada</th>
+                    <th>Salida</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="reservationsBody">
+                <!-- Las filas se llenan dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <template id="rowTemplate">
+        <tr>
+            <td class="cliente_nombre"></td>
+            <td class="cliente_correo"></td>
+            <td class="habitacion_tipo"></td>
+            <td class="habitacion_precio"></td>
+            <td class="fecha_entrada"></td>
+            <td class="fecha_salida"></td>
+            <td class="estado"></td>
+            <td>
+                <button class="editBtn btn small">Editar</button>
+                <button class="deleteBtn btn small danger">Eliminar</button>
+            </td>
+        </tr>
+    </template>
+
+    <template id="editRowTemplate">
+        <tr>
+            <td class="cliente_nombre"></td>
+            <td class="cliente_correo"></td>
+            <td class="habitacion_tipo"></td>
+            <td class="habitacion_precio"></td>
+            <td>
+                <input type="date" class="edit_fecha_entrada">
+            </td>
+            <td>
+                <input type="date" class="edit_fecha_salida">
+            </td>
+            <td>
+                <select class="edit_estado">
+                    <option value="pendiente">Pendiente</option>
+                    <option value="confirmada">Confirmada</option>
+                    <option value="cancelada">Cancelada</option>
+                </select>
+            </td>
+            <td>
+                <button class="saveBtn btn small">Guardar</button>
+                <button class="cancelBtn btn small secondary">Cancelar</button>
+            </td>
+        </tr>
+    </template>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api/reservations';
+        let reservations = [];
+        let editingId = null;
+
+        function fetchReservations() {
+            fetch(API_URL)
+                .then(res => res.json())
+                .then(data => {
+                    reservations = data;
+                    renderTable();
+                });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('reservationsBody');
+            tbody.innerHTML = '';
+            reservations.forEach(reserva => {
+                if (editingId === reserva.reserva_id) {
+                    const editRow = document.getElementById('editRowTemplate').content.cloneNode(true);
+                    editRow.querySelector('.cliente_nombre').textContent = reserva.cliente_nombre;
+                    editRow.querySelector('.cliente_correo').textContent = reserva.cliente_correo;
+                    editRow.querySelector('.habitacion_tipo').textContent = reserva.habitacion_tipo;
+                    editRow.querySelector('.habitacion_precio').textContent = reserva.habitacion_precio;
+                    editRow.querySelector('.edit_fecha_entrada').value = reserva.fecha_entrada;
+                    editRow.querySelector('.edit_fecha_salida').value = reserva.fecha_salida;
+                    editRow.querySelector('.edit_estado').value = reserva.estado;
+
+                    editRow.querySelector('.saveBtn').onclick = () => saveEdit(reserva.reserva_id, editRow);
+                    editRow.querySelector('.cancelBtn').onclick = () => { editingId = null; renderTable(); };
+                    tbody.appendChild(editRow);
+                } else {
+                    const row = document.getElementById('rowTemplate').content.cloneNode(true);
+                    row.querySelector('.cliente_nombre').textContent = reserva.cliente_nombre;
+                    row.querySelector('.cliente_correo').textContent = reserva.cliente_correo;
+                    row.querySelector('.habitacion_tipo').textContent = reserva.habitacion_tipo;
+                    row.querySelector('.habitacion_precio').textContent = reserva.habitacion_precio;
+                    row.querySelector('.fecha_entrada').textContent = reserva.fecha_entrada;
+                    row.querySelector('.fecha_salida').textContent = reserva.fecha_salida;
+                    row.querySelector('.estado').textContent = reserva.estado;
+
+                    row.querySelector('.editBtn').onclick = () => { editingId = reserva.reserva_id; renderTable(); };
+                    row.querySelector('.deleteBtn').onclick = () => deleteReservation(reserva.reserva_id);
+                    tbody.appendChild(row);
+                }
+            });
+        }
+
+        function saveEdit(id, editRow) {
+            const fecha_entrada = editRow.querySelector('.edit_fecha_entrada').value;
+            const fecha_salida = editRow.querySelector('.edit_fecha_salida').value;
+            const estado = editRow.querySelector('.edit_estado').value;
+            fetch(`${API_URL}/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fecha_entrada, fecha_salida, estado })
+            }).then(() => {
+                editingId = null;
+                fetchReservations();
+            });
+        }
+
+        function deleteReservation(id) {
+            if (confirm('¿Eliminar esta reservación?')) {
+                fetch(`${API_URL}/${id}`, { method: 'DELETE' })
+                    .then(() => fetchReservations());
+            }
+        }
+
+        window.onload = fetchReservations;
+    </script>
+</body>
+</html>

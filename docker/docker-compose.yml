@@ -1,71 +1,28 @@
 version: '3.8'
 
 services:
-  cockroach:
-    image: cockroachdb/cockroach:v22.1.0
-    command: start --insecure --join=cockroach1,cockroach2,cockroach3
-    volumes:
-      - cockroach-data:/cockroach/cockroach-data
+  roach1:
+    image: cockroachdb/cockroach:v23.1.11
+    container_name: roach1
+    hostname: roach1
+    command: start --insecure --advertise-addr=roach1 --join=roach1 --listen-addr=0.0.0.0:26257 --http-addr=0.0.0.0:8080
     ports:
       - "26257:26257"
       - "8080:8080"
     networks:
-      - hotel-network
+      - roachnet
 
-  cockroach1:
-    image: cockroachdb/cockroach:v22.1.0
-    command: start --insecure --join=cockroach,cockroach2,cockroach3
-    volumes:
-      - cockroach1-data:/cockroach/cockroach-data
-    networks:
-      - hotel-network
-
-  cockroach2:
-    image: cockroachdb/cockroach:v22.1.0
-    command: start --insecure --join=cockroach,cockroach1,cockroach3
-    volumes:
-      - cockroach2-data:/cockroach/cockroach-data
-    networks:
-      - hotel-network
-
-  cockroach3:
-    image: cockroachdb/cockroach:v22.1.0
-    command: start --insecure --join=cockroach,cockroach1,cockroach2
-    volumes:
-      - cockroach3-data:/cockroach/cockroach-data
-    networks:
-      - hotel-network
-
-  backend:
-    build:
-      context: ../backend
-      dockerfile: ../docker/backend.Dockerfile
-    environment:
-      - DATABASE_URL=postgresql://root@cockroach:26257/defaultdb?sslmode=disable
-    depends_on:
-      - cockroach
+  roach2:
+    image: cockroachdb/cockroach:v23.1.11
+    container_name: roach2
+    hostname: roach2
+    command: start --insecure --advertise-addr=roach2 --join=roach1 --listen-addr=0.0.0.0:26257 --http-addr=0.0.0.0:8080
     ports:
-      - "3000:3000"
+      - "26258:26257"
+      - "8081:8080"
     networks:
-      - hotel-network
-
-  frontend:
-    build:
-      context: ../frontend
-      dockerfile: ../frontend/Dockerfile
-    ports:
-      - "3001:3000"
-    depends_on:
-      - backend
-    networks:
-      - hotel-network
-
-volumes:
-  cockroach-data:
-  cockroach1-data:
-  cockroach2-data:
-  cockroach3-data:
+      - roachnet
 
 networks:
-  hotel-network:
+  roachnet:
     driver: bridge

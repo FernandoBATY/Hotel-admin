@@ -1,6 +1,10 @@
 const { Pool } = require('pg');
 
-const hosts = ['192.168.0.201', '192.168.0.198', '192.168.0.224'];
+// Usa los hostnames de Docker
+const hosts = [
+  '192.168.0.206',
+  '192.168.1.11'
+];
 const pools = hosts.map(host => new Pool({
   user: 'root',
   host,
