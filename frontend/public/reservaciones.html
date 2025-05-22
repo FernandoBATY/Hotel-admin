@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Reservaciones de Clientes</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -19,6 +20,7 @@
                     <th>Entrada</th>
                     <th>Salida</th>
                     <th>Estado</th>
+                    <th>QR Code</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -37,6 +39,7 @@
             <td class="fecha_entrada"></td>
             <td class="fecha_salida"></td>
             <td class="estado"></td>
+            <td class="qr_code_cell" style="text-align: center;"></td>
             <td>
                 <button class="editBtn btn small">Editar</button>
                 <button class="deleteBtn btn small danger">Eliminar</button>
@@ -63,6 +66,7 @@
                     <option value="cancelada">Cancelada</option>
                 </select>
             </td>
+            <td class="qr_code_cell_edit" style="text-align: center;"></td>
             <td>
                 <button class="saveBtn btn small">Guardar</button>
                 <button class="cancelBtn btn small secondary">Cancelar</button>
@@ -110,6 +114,16 @@
                     row.querySelector('.fecha_entrada').textContent = reserva.fecha_entrada;
                     row.querySelector('.fecha_salida').textContent = reserva.fecha_salida;
                     row.querySelector('.estado').textContent = reserva.estado;
+
+                    const qrCell = row.querySelector('.qr_code_cell');
+                    qrCell.innerHTML = ''; // Clear previous QR
+                    const roomServiceURL = `${window.location.origin}/room_service.html?reserva_id=${reserva.reserva_id}`;
+                    new QRCode(qrCell, {
+                        text: roomServiceURL,
+                        width: 80,
+                        height: 80,
+                        correctLevel: QRCode.CorrectLevel.L
+                    });
 
                     row.querySelector('.editBtn').onclick = () => { editingId = reserva.reserva_id; renderTable(); };
                     row.querySelector('.deleteBtn').onclick = () => deleteReservation(reserva.reserva_id);

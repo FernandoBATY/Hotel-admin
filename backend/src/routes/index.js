@@ -11,6 +11,12 @@ const setRoutes = (app) => {
     router.put('/reservations/:id', indexController.updateReservation);
     router.delete('/reservations/:id', indexController.deleteReservation);
 
+    router.get('/platillos', indexController.getAllPlatillos);
+
+    router.post('/pedidos', indexController.createPedido);
+    router.get('/pedidos', indexController.getAllPedidos);
+    router.get('/pedidos/:id', indexController.getPedidoById);
+
     app.use('/api', router);
 };
 
