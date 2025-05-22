@@ -27,6 +27,15 @@
         </table>
     </div>
 
+    <!-- Modal for Order Details -->
+    <div id="orderDetailsModal" style="display:none; position:fixed; left:50%; top:50%; transform:translate(-50%, -50%); padding:20px; background:white; border:1px solid #ccc; box-shadow:0 0 10px rgba(0,0,0,0.5); z-index:1000; max-width: 500px; max-height: 80vh; overflow-y: auto;">
+        <h3>Order Details</h3>
+        <div id="orderDetailsContent">
+            <!-- Details will be populated here -->
+        </div>
+        <button id="closeModalBtn" style="margin-top: 15px;">Close</button>
+    </div>
+
     <template id="pedidoRowTemplate">
         <tr>
             <td class="pedido_id"></td>
@@ -62,13 +71,67 @@
                 const row = document.getElementById('pedidoRowTemplate').content.cloneNode(true);
                 row.querySelector('.pedido_id').textContent = pedido.pedido_id;
                 row.querySelector('.cliente_nombre').textContent = pedido.cliente_nombre || '';
-                row.querySelector('.habitacion_tipo').textContent = pedido.habitacion_tipo || '';
-                row.querySelector('.fecha_hora').textContent = pedido.fecha_hora || '';
-                row.querySelector('.estado').textContent = pedido.estado || '';
-                row.querySelector('.total').textContent = pedido.total || '';
-                row.querySelector('.verBtn').onclick = () => alert('Detalle de pedido no implementado');
+                row.querySelector('.habitacion_tipo').textContent = pedido.habitacion_tipo || 'N/A';
+                // Assuming fecha_pedido is the correct field from backend
+                row.querySelector('.fecha_hora').textContent = pedido.fecha_pedido ? new Date(pedido.fecha_pedido).toLocaleString() : 'N/A';
+                row.querySelector('.estado').textContent = pedido.estado || 'N/A';
+                row.querySelector('.total').textContent = pedido.total ? `$${parseFloat(pedido.total).toFixed(2)}` : 'N/A';
+                row.querySelector('.verBtn').onclick = () => viewOrderDetails(pedido.pedido_id);
                 tbody.appendChild(row);
             });
+        }
+
+        async function viewOrderDetails(pedidoId) {
+            const modal = document.getElementById('orderDetailsModal');
+            const content = document.getElementById('orderDetailsContent');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+
+            content.innerHTML = '<p>Loading details...</p>';
+            modal.style.display = 'block';
+
+            closeModalBtn.onclick = () => {
+                modal.style.display = 'none';
+                content.innerHTML = ''; // Clear content when closing
+            };
+
+            try {
+                const response = await fetch(`/api/pedidos/${pedidoId}`); // API_URL is base, so prepend /api
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Error fetching details: ${response.status}`);
+                }
+                const pedido = await response.json();
+
+                let detailsHtml = `
+                    <p><strong>Pedido ID:</strong> ${pedido.pedido_id}</p>
+                    <p><strong>Cliente:</strong> ${pedido.cliente_nombre || 'N/A'}</p>
+                    <p><strong>Habitación:</strong> ${pedido.habitacion_tipo || 'N/A'}</p>
+                    <p><strong>Fecha:</strong> ${new Date(pedido.fecha_pedido).toLocaleString()}</p>
+                    <p><strong>Estado:</strong> ${pedido.estado}</p>
+                    <p><strong>Total:</strong> $${parseFloat(pedido.total).toFixed(2)}</p>
+                    <h4>Items:</h4>
+                `;
+
+                if (pedido.items && pedido.items.length > 0) {
+                    detailsHtml += '<ul>';
+                    pedido.items.forEach(item => {
+                        detailsHtml += `
+                            <li>
+                                ${item.platillo_nombre} - Cantidad: ${item.cantidad}, 
+                                Precio Unitario: $${parseFloat(item.platillo_precio).toFixed(2)}, 
+                                Subtotal: $${parseFloat(item.subtotal).toFixed(2)}
+                            </li>
+                        `;
+                    });
+                    detailsHtml += '</ul>';
+                } else {
+                    detailsHtml += '<p>No items found for this order.</p>';
+                }
+                content.innerHTML = detailsHtml;
+
+            } catch (error) {
+                content.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+            }
         }
 
         window.onload = fetchPedidos;

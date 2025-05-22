@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Room Service</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        #menuItemsContainer .platillo, #currentOrderContainer .order-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+        }
+        .platillo h3, .order-item h3 {
+            margin-top: 0;
+        }
+        .platillo input[type="number"] {
+            width: 60px;
+            margin-right: 10px;
+        }
+        .platillo button, #placeOrderBtn {
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .platillo button:hover, #placeOrderBtn:hover {
+            background-color: #4cae4c;
+        }
+        #orderTotal {
+            font-weight: bold;
+        }
+        #messageArea {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success-message {
+            background-color: #dff0d8;
+            color: #3c763d;
+            border: 1px solid #d6e9c6;
+        }
+        .error-message {
+            background-color: #f2dede;
+            color: #a94442;
+            border: 1px solid #ebccd1;
+        }
+        /* Mobile Friendliness */
+        @media (max-width: 768px) {
+            .container {
+                width: 95%;
+            }
+            .platillo button, #placeOrderBtn {
+                width: 100%;
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Order Room Service</h1>
+        <p>Reservation ID: <span id="reservaIdDisplay">Loading...</span></p>
+
+        <h2>Menu</h2>
+        <div id="menuItemsContainer">
+            <!-- Platillos will be loaded here by JavaScript -->
+            <p>Loading menu...</p>
+        </div>
+
+        <h2>Your Order</h2>
+        <div id="currentOrderContainer">
+            <p>Your order is empty.</p>
+            <!-- Current order details will be loaded here by JavaScript -->
+        </div>
+        <p>Total: $<span id="orderTotal">0.00</span></p>
+        <button id="placeOrderBtn">Place Order</button>
+        <div id="messageArea"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const reservaIdDisplay = document.getElementById('reservaIdDisplay');
+            const menuItemsContainer = document.getElementById('menuItemsContainer');
+            const currentOrderContainer = document.getElementById('currentOrderContainer');
+            const orderTotalDisplay = document.getElementById('orderTotal');
+            const placeOrderBtn = document.getElementById('placeOrderBtn');
+            const messageArea = document.getElementById('messageArea');
+
+            let reservaId = null;
+            let currentOrderItems = []; // Stores { platillo_id, nombre, precio, cantidad }
+
+            // 1. Extract reserva_id from URL
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                reservaId = urlParams.get('reserva_id');
+                if (reservaId) {
+                    reservaIdDisplay.textContent = reservaId;
+                } else {
+                    displayMessage('Error: Reservation ID (reserva_id) not found in URL.', true);
+                    placeOrderBtn.disabled = true;
+                    reservaIdDisplay.textContent = 'N/A';
+                }
+            } catch (error) {
+                displayMessage('Error reading Reservation ID from URL.', true);
+                placeOrderBtn.disabled = true;
+                reservaIdDisplay.textContent = 'Error';
+            }
+
+            // 2. Fetch and Display Platillos
+            async function fetchPlatillos() {
+                if (!reservaId) return; // Don't fetch if no reserva_id
+                try {
+                    const response = await fetch('/api/platillos');
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const platillos = await response.json();
+                    renderPlatillos(platillos);
+                } catch (error) {
+                    displayMessage(`Error fetching menu: ${error.message}`, true);
+                    menuItemsContainer.innerHTML = '<p>Could not load menu items.</p>';
+                }
+            }
+
+            function renderPlatillos(platillos) {
+                menuItemsContainer.innerHTML = ''; // Clear loading message
+                if (!platillos || platillos.length === 0) {
+                    menuItemsContainer.innerHTML = '<p>No menu items available at the moment.</p>';
+                    return;
+                }
+                platillos.forEach(platillo => {
+                    if (!platillo.disponible) return; // Skip unavailable items
+
+                    const platilloDiv = document.createElement('div');
+                    platilloDiv.classList.add('platillo');
+                    platilloDiv.innerHTML = `
+                        <h3>${platillo.nombre}</h3>
+                        <p>${platillo.descripcion}</p>
+                        <p>Price: $${parseFloat(platillo.precio).toFixed(2)}</p>
+                        <input type="number" id="qty-${platillo.platillo_id}" min="0" value="0" class="platillo-qty">
+                        <button data-id="${platillo.platillo_id}" data-nombre="${platillo.nombre}" data-precio="${platillo.precio}">Add to Order</button>
+                    `;
+                    menuItemsContainer.appendChild(platilloDiv);
+
+                    platilloDiv.querySelector('button').addEventListener('click', (e) => {
+                        const id = parseInt(e.target.dataset.id);
+                        const nombre = e.target.dataset.nombre;
+                        const precio = parseFloat(e.target.dataset.precio);
+                        const cantidadInput = document.getElementById(`qty-${id}`);
+                        const cantidad = parseInt(cantidadInput.value);
+                        
+                        if (isNaN(cantidad)) {
+                            displayMessage('Please enter a valid quantity.', true);
+                            return;
+                        }
+                        addItemToOrder(id, nombre, precio, cantidad);
+                        if (cantidad > 0) {
+                             displayMessage(`${nombre} added/updated in your order.`, false);
+                        } else {
+                             displayMessage(`${nombre} removed from your order.`, false);
+                        }
+                    });
+                });
+            }
+
+            // 3. Order Management
+            function addItemToOrder(platillo_id, nombre, precio, cantidad) {
+                const existingItemIndex = currentOrderItems.findIndex(item => item.platillo_id === platillo_id);
+
+                if (cantidad > 0) {
+                    if (existingItemIndex > -1) {
+                        currentOrderItems[existingItemIndex].cantidad = cantidad;
+                    } else {
+                        currentOrderItems.push({ platillo_id, nombre, precio, cantidad });
+                    }
+                } else { // cantidad is 0 or less
+                    if (existingItemIndex > -1) {
+                        currentOrderItems.splice(existingItemIndex, 1);
+                    }
+                }
+                updateOrderSummary();
+            }
+
+            function updateOrderSummary() {
+                currentOrderContainer.innerHTML = ''; // Clear previous summary
+                let total = 0;
+
+                if (currentOrderItems.length === 0) {
+                    currentOrderContainer.innerHTML = '<p>Your order is empty.</p>';
+                    orderTotalDisplay.textContent = '0.00';
+                    return;
+                }
+
+                const ul = document.createElement('ul');
+                currentOrderItems.forEach(item => {
+                    const li = document.createElement('li');
+                    li.classList.add('order-item');
+                    const subtotal = item.precio * item.cantidad;
+                    li.innerHTML = `
+                        <h3>${item.nombre}</h3>
+                        <p>Quantity: ${item.cantidad}</p>
+                        <p>Subtotal: $${subtotal.toFixed(2)}</p>
+                    `;
+                    ul.appendChild(li);
+                    total += subtotal;
+                });
+                currentOrderContainer.appendChild(ul);
+                orderTotalDisplay.textContent = total.toFixed(2);
+            }
+
+            // 4. Place Order
+            placeOrderBtn.addEventListener('click', async () => {
+                if (!reservaId) {
+                    displayMessage('Cannot place order: Reservation ID is missing.', true);
+                    return;
+                }
+                if (currentOrderItems.length === 0) {
+                    displayMessage('Cannot place order: Your order is empty.', true);
+                    return;
+                }
+
+                const orderData = {
+                    reserva_id: parseInt(reservaId),
+                    items: currentOrderItems.map(item => ({
+                        platillo_id: item.platillo_id,
+                        cantidad: item.cantidad
+                    }))
+                };
+
+                try {
+                    const response = await fetch('/api/pedidos', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(orderData),
+                    });
+
+                    if (response.status === 201) {
+                        const result = await response.json();
+                        displayMessage(`Order placed successfully! Order ID: ${result.pedido_id}`, false);
+                        currentOrderItems = [];
+                        updateOrderSummary();
+                        // Optionally, clear input fields
+                        document.querySelectorAll('.platillo-qty').forEach(input => input.value = '0');
+                    } else {
+                        const errorData = await response.json();
+                        throw new Error(errorData.details || errorData.error || `HTTP error! status: ${response.status}`);
+                    }
+                } catch (error) {
+                    displayMessage(`Error placing order: ${error.message}`, true);
+                }
+            });
+
+            // Helper function to display messages
+            function displayMessage(message, isError) {
+                messageArea.textContent = message;
+                messageArea.className = 'message-area'; // Reset classes
+                if (isError) {
+                    messageArea.classList.add('error-message');
+                } else {
+                    messageArea.classList.add('success-message');
+                }
+                // Clear message after some time
+                setTimeout(() => {
+                    messageArea.textContent = '';
+                    messageArea.className = 'message-area';
+                }, 5000);
+            }
+
+            // Initial fetch
+            fetchPlatillos();
+        });
+    </script>
+</body>
+</html>
