@@ -28,7 +28,8 @@ CREATE TABLE Platillo (
   nombre TEXT NOT NULL,
   descripcion TEXT,
   precio DECIMAL NOT NULL,
-  disponible BOOLEAN DEFAULT TRUE
+  disponible BOOLEAN DEFAULT TRUE,
+  categoria TEXT NOT NULL
 );
 
 CREATE TABLE PedidoServicio (
@@ -43,6 +44,22 @@ CREATE TABLE DetallePedido (
   detalle_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   pedido_id UUID REFERENCES PedidoServicio(pedido_id),
   platillo_id UUID REFERENCES Platillo(platillo_id),
+  cantidad INT,
+  subtotal DECIMAL
+);
+
+CREATE TABLE ArticulosPersonales (
+  articulo_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nombre TEXT NOT NULL,
+  descripcion TEXT,
+  precio DECIMAL NOT NULL,
+  disponible BOOLEAN DEFAULT TRUE
+);
+
+CREATE TABLE DetalleArticuloPedido (
+  detalle_articulo_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  pedido_id UUID REFERENCES PedidoServicio(pedido_id),
+  articulo_id UUID REFERENCES ArticulosPersonales(articulo_id),
   cantidad INT,
   subtotal DECIMAL
 );

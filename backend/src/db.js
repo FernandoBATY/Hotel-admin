@@ -2,10 +2,13 @@ const { Pool } = require('pg');
 
 // Usa los hostnames de Docker
 const hosts = [
-  '192.168.0.206',
-  '192.168.1.11'
+  '100.76.128.66',
+  '100.78.38.102',
+  '100.113.50.42',
+  '100.110.81.32'
 ];
 const pools = hosts.map(host => new Pool({
+
   user: 'root',
   host,
   database: 'hotel_reservation',
@@ -54,22 +57,36 @@ const getClient = async () => {
 
 // Método para probar la conexión y mostrar información del nodo y base de datos
 const testConnection = async () => {
-  for (const pool of pools) {
+  let connectedNodes = [];
+  let failedNodes = [];
+  for (let i = 0; i < pools.length; i++) {
+    const pool = pools[i];
+    const host = hosts[i];
     try {
       const dbs = await pool.query('SHOW DATABASES;');
       const nodeInfo = await pool.query('SELECT node_id FROM crdb_internal.node_runtime_info LIMIT 1;');
-      console.log('Conexión a la base de datos exitosa');
+      let nodeId = nodeInfo.rows.length > 0 ? nodeInfo.rows[0].node_id : 'desconocido';
+      connectedNodes.push({ host, nodeId });
+      console.log(`Conexión exitosa al nodo ${nodeId} (${host})`);
       console.log('Bases de datos disponibles:', dbs.rows.map(r => r.database_name).join(', '));
-      if (nodeInfo.rows.length > 0) {
-        console.log('Conectado al nodo:', nodeInfo.rows[0].node_id);
-      }
-      return;
     } catch (err) {
-      // Intenta el siguiente pool
-      continue;
+      failedNodes.push({ host, error: err.message });
+      console.error(`Error al conectar con el nodo (${host}):`, err.message);
     }
   }
-  console.error('Error al conectar con la base de datos en todos los nodos');
+  if (connectedNodes.length === 0) {
+    console.error('No se pudo conectar con ningún nodo de la base de datos.');
+  } else {
+    console.log('Resumen de conexión:');
+    connectedNodes.forEach(n => {
+      console.log(`✔ Nodo conectado: ${n.nodeId} (${n.host})`);
+    });
+    if (failedNodes.length > 0) {
+      failedNodes.forEach(n => {
+        console.log(`✖ Nodo NO conectado: (${n.host}) - ${n.error}`);
+      });
+    }
+  }
 };
 
 module.exports = {
