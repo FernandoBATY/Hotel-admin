@@ -1,4 +1,5 @@
 const { query } = require('../db');
+const crypto = require('crypto');
 
 class IndexController {
     // Obtener todas las reservaciones con datos de cliente y habitación
@@ -224,6 +225,94 @@ class IndexController {
             res.json(pedido);
         } catch (err) {
             res.status(500).json({ error: 'Error al obtener detalle del pedido', details: err.message });
+        }
+    }
+
+    async handleQrLogin(req, res) {
+        try {
+            const { qr_token } = req.params;
+
+            if (!qr_token) {
+                return res.status(400).json({ error: 'QR token no proporcionado' });
+            }
+
+            const result = await query(
+                `SELECT reserva_id, estado, fecha_salida
+                 FROM Reservacion
+                 WHERE qr_token = $1`,
+                [qr_token]
+            );
+
+            if (result.rows.length === 0) {
+                return res.status(404).json({ error: 'Código QR inválido o expirado' });
+            }
+
+            const reservation = result.rows[0];
+
+            // Basic check for active reservation (can be expanded)
+            // For now, we consider 'activa' or a future 'fecha_salida' as active
+            const isActive = reservation.estado === 'activa' || new Date(reservation.fecha_salida) > new Date();
+
+            if (!isActive) {
+                return res.status(403).json({ error: 'La reservación asociada al QR no está activa.' });
+            }
+
+            // Redirect to room service page with reserva_id
+            // Assuming frontend is served from a directory where /room_service.html is accessible at the root
+            res.redirect(`/room_service.html?reserva_id=${reservation.reserva_id}`);
+
+        } catch (err) {
+            console.error('Error en handleQrLogin:', err);
+            res.status(500).json({ error: 'Error al procesar el login con QR', details: err.message });
+        }
+    }
+
+    async generateQrTokenForReservation(req, res) {
+        try {
+            const { reserva_id } = req.params;
+
+            if (!reserva_id) {
+                return res.status(400).json({ error: 'ID de reservación no proporcionado' });
+            }
+
+            // Check if reservation exists
+            const reservationResult = await query('SELECT reserva_id FROM Reservacion WHERE reserva_id = $1', [reserva_id]);
+            if (reservationResult.rows.length === 0) {
+                return res.status(404).json({ error: 'Reservación no encontrada' });
+            }
+
+            const qrToken = crypto.randomBytes(16).toString('hex'); // Generate a 32-character hex token
+            const expiresInDays = 7; // Token expiry in days
+            const qrTokenExpiresAt = new Date();
+            qrTokenExpiresAt.setDate(qrTokenExpiresAt.getDate() + expiresInDays);
+
+            const updateResult = await query(
+                `UPDATE Reservacion
+                 SET qr_token = $1, qr_token_expires_at = $2
+                 WHERE reserva_id = $3
+                 RETURNING qr_token`,
+                [qrToken, qrTokenExpiresAt, reserva_id]
+            );
+
+            if (updateResult.rows.length === 0) {
+                // This case should ideally not be reached if the initial check passed
+                return res.status(500).json({ error: 'Error al actualizar la reservación con el token QR' });
+            }
+
+            const newQrToken = updateResult.rows[0].qr_token;
+            // Construct the login URL based on typical environment variables or a fixed domain for now
+            const baseUrl = process.env.BASE_URL || 'http://localhost:3000'; // Adjust as needed
+            const loginUrl = `${baseUrl}/api/qr-login/${newQrToken}`;
+
+            res.json({
+                qr_token: newQrToken,
+                login_url: loginUrl,
+                expires_at: qrTokenExpiresAt.toISOString()
+            });
+
+        } catch (err) {
+            console.error('Error en generateQrTokenForReservation:', err);
+            res.status(500).json({ error: 'Error al generar el token QR', details: err.message });
         }
     }
 }

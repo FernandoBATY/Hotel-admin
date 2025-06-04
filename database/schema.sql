@@ -20,8 +20,12 @@ CREATE TABLE Reservacion (
   fecha_entrada DATE NOT NULL,
   fecha_salida DATE NOT NULL,
   estado TEXT DEFAULT 'pendiente',
-  precio DECIMAL NOT NULL
+  precio DECIMAL NOT NULL,
+  qr_token TEXT UNIQUE,
+  qr_token_expires_at TIMESTAMPTZ
 );
+
+CREATE INDEX idx_qr_token ON Reservacion(qr_token);
 
 CREATE TABLE Platillo (
   platillo_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
