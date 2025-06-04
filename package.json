@@ -2,8 +2,10 @@
   "name": "hotel-admin-app",
   "private": true,
   "scripts": {
-    "start": "concurrently \"npm start --prefix backend\" \"npx serve frontend/public\"",
-    "dev": "concurrently \"npm start --prefix backend\" \"npx serve frontend/public\"",
+    "start": "concurrently \"npm start --prefix backend\" \"npx serve frontend/public --listen 3100\"",
+    "dev": "concurrently \"npm start --prefix backend\" \"npx serve frontend/public --listen 3100\"",
+    "tunnel": "npx localtunnel --port 3100 --subdomain hoteladminqr",
+    "tunnel-backend": "npx localtunnel --port 3000 --subdomain hoteladminapi",
     "install-all": "npm install --prefix backend && npm install --prefix frontend"
   },
   "devDependencies": {

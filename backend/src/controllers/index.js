@@ -116,7 +116,7 @@ class IndexController {
         }
 
         const client = await query('BEGIN'); // Iniciar transacción
-
+        let transactionStarted = false;
         try {
             // Obtener precios de los platillos y verificar existencia
             const platilloIds = items.map(item => item.platillo_id);
@@ -165,7 +165,9 @@ class IndexController {
             await query('COMMIT'); // Confirmar transacción
             res.status(201).json(nuevoPedido);
         } catch (err) {
-            await query('ROLLBACK'); // Revertir transacción en caso de error
+            if (transactionStarted) {
+                await query('ROLLBACK');
+            }
             res.status(500).json({ error: 'Error al crear pedido', details: err.message });
         }
     }

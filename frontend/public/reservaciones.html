@@ -78,6 +78,8 @@
 
     <script>
         const API_URL = 'http://localhost:3000/api/reservations';
+        // Usa la URL pública o IP local del frontend
+        const QR_BASE_URL = 'http://192.168.1.106:3100'; // O tu URL pública/túnel
         let reservations = [];
         let editingId = null;
 
@@ -119,7 +121,7 @@
 
                     const qrCell = row.querySelector('.qr_code_cell');
                     qrCell.innerHTML = ''; // Clear previous QR
-                    const roomServiceURL = `${window.location.origin}/room_service.html?reserva_id=${reserva.reserva_id}`;
+                    const roomServiceURL = `${QR_BASE_URL}/room_service?reserva_id=${reserva.reserva_id}`;
                     new QRCode(qrCell, {
                         text: roomServiceURL,
                         width: 80,
