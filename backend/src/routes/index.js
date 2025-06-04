@@ -17,6 +17,9 @@ const setRoutes = (app) => {
     router.get('/pedidos', indexController.getAllPedidos);
     router.get('/pedidos/:id', indexController.getPedidoById);
 
+    router.get('/qr-login/:qr_token', indexController.handleQrLogin);
+    router.post('/reservations/:reserva_id/generate-qr', indexController.generateQrTokenForReservation);
+
     app.use('/api', router);
 };
 
