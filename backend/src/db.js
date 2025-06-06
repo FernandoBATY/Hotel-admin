@@ -89,8 +89,18 @@ const testConnection = async () => {
   }
 };
 
+const pool = new Pool({
+  user: 'root',
+  host: '100.76.128.66',
+  database: 'hotel_reservation',
+  password: '',
+  port: 26257,
+  ssl: false,
+});
+
 module.exports = {
   query,
   getClient,
   testConnection,
+  pool,
 };

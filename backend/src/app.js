@@ -1,19 +1,16 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const cors = require('cors');
-const setRoutes = require('./routes/index');
-const { testConnection } = require('./db');
+const routes = require('./routes/index');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(routes);
 
-setRoutes(app);
-
-app.listen(PORT, async () => {
-    await testConnection();
-    console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
 });
+
+module.exports = app;

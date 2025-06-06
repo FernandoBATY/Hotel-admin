@@ -1,26 +1,25 @@
 const express = require('express');
+const router = express.Router();
 const IndexController = require('../controllers/index');
+const controller = new IndexController();
 
-const setRoutes = (app) => {
-    const router = express.Router();
-    const indexController = new IndexController();
+// Rutas de reservaciones
+router.get('/api/reservations', controller.getAllReservations);
+router.post('/api/reservations', controller.createReservation);
+router.get('/api/reservations/:id', controller.getReservationById);
+router.put('/api/reservations/:id', controller.updateReservation);
+router.delete('/api/reservations/:id', controller.deleteReservation);
 
-    router.get('/reservations', indexController.getAllReservations);
-    router.post('/reservations', indexController.createReservation);
-    router.get('/reservations/:id', indexController.getReservationById);
-    router.put('/reservations/:id', indexController.updateReservation);
-    router.delete('/reservations/:id', indexController.deleteReservation);
+// Rutas de platillos
+router.get('/api/platillos', controller.getAllPlatillos);
 
-    router.get('/platillos', indexController.getAllPlatillos);
+// Rutas de pedidos
+router.post('/api/pedidos', controller.createPedido);
+router.get('/api/pedidos', controller.getAllPedidos);
+router.get('/api/pedidos/:id', controller.getPedidoById);
 
-    router.post('/pedidos', indexController.createPedido);
-    router.get('/pedidos', indexController.getAllPedidos);
-    router.get('/pedidos/:id', indexController.getPedidoById);
+// Rutas de QR
+router.get('/api/qr-login/:qr_token', controller.handleQrLogin);
+router.get('/api/reservations/:reserva_id/qr', controller.generateQrTokenForReservation);
 
-    router.get('/qr-login/:qr_token', indexController.handleQrLogin);
-    router.post('/reservations/:reserva_id/generate-qr', indexController.generateQrTokenForReservation);
-
-    app.use('/api', router);
-};
-
-module.exports = setRoutes;
+module.exports = router;

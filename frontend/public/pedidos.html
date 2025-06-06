@@ -2,140 +2,38 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Pedidos a Habitación</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos - Administración</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles-pedidos.css">
 </head>
 <body>
     <div class="container">
-        <a href="index.html" class="volver-inicio">← Regresar</a>
-        <h1>Pedidos a Habitación</h1>
-        <table id="pedidosTable">
+        <h1>Pedidos</h1>
+        <table class="tabla-pedidos">
             <thead>
                 <tr>
-                    <th>Pedido</th>
+                    <th>ID Pedido</th>
+                    <th>Reservación</th>
                     <th>Cliente</th>
                     <th>Habitación</th>
-                    <th>Fecha/Hora</th>
-                    <th>Estado</th>
                     <th>Total</th>
+                    <th>Estado</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
-            <tbody id="pedidosBody">
-                <!-- Las filas se llenan dinámicamente -->
+            <tbody id="pedidosTableBody">
+                <!-- Pedidos aquí -->
             </tbody>
         </table>
     </div>
-
-    <!-- Modal for Order Details -->
-    <div id="orderDetailsModal" style="display:none; position:fixed; left:50%; top:50%; transform:translate(-50%, -50%); padding:20px; background:white; border:1px solid #ccc; box-shadow:0 0 10px rgba(0,0,0,0.5); z-index:1000; max-width: 500px; max-height: 80vh; overflow-y: auto;">
-        <h3>Order Details</h3>
-        <div id="orderDetailsContent">
-            <!-- Details will be populated here -->
+    <!-- Modal -->
+    <div class="modal-bg" id="modalBg">
+        <div class="modal-content" id="modalContent">
+            <button class="modal-close" onclick="cerrarModal()">&times;</button>
+            <div id="modalBody">Cargando...</div>
         </div>
-        <button id="closeModalBtn" style="margin-top: 15px;">Close</button>
     </div>
-
-    <template id="pedidoRowTemplate">
-        <tr>
-            <td class="pedido_id"></td>
-            <td class="cliente_nombre"></td>
-            <td class="habitacion_tipo"></td>
-            <td class="fecha_hora"></td>
-            <td class="estado"></td>
-            <td class="total"></td>
-            <td>
-                <button class="verBtn btn small">Ver Detalle</button>
-            </td>
-        </tr>
-    </template>
-
-    <script>
-        // NOTA: Cambia la URL y los campos según tu API real
-        const API_URL = 'http://localhost:3000/api/pedidos';
-        let pedidos = [];
-
-        function fetchPedidos() {
-            fetch(API_URL)
-                .then(res => res.json())
-                .then(data => {
-                    pedidos = data;
-                    renderPedidos();
-                });
-        }
-
-        function renderPedidos() {
-            const tbody = document.getElementById('pedidosBody');
-            tbody.innerHTML = '';
-            pedidos.forEach(pedido => {
-                const row = document.getElementById('pedidoRowTemplate').content.cloneNode(true);
-                row.querySelector('.pedido_id').textContent = pedido.pedido_id;
-                row.querySelector('.cliente_nombre').textContent = pedido.cliente_nombre || '';
-                row.querySelector('.habitacion_tipo').textContent = pedido.habitacion_tipo || 'N/A';
-                // Assuming fecha_pedido is the correct field from backend
-                row.querySelector('.fecha_hora').textContent = pedido.fecha_pedido ? new Date(pedido.fecha_pedido).toLocaleString() : 'N/A';
-                row.querySelector('.estado').textContent = pedido.estado || 'N/A';
-                row.querySelector('.total').textContent = pedido.total ? `$${parseFloat(pedido.total).toFixed(2)}` : 'N/A';
-                row.querySelector('.verBtn').onclick = () => viewOrderDetails(pedido.pedido_id);
-                tbody.appendChild(row);
-            });
-        }
-
-        async function viewOrderDetails(pedidoId) {
-            const modal = document.getElementById('orderDetailsModal');
-            const content = document.getElementById('orderDetailsContent');
-            const closeModalBtn = document.getElementById('closeModalBtn');
-
-            content.innerHTML = '<p>Loading details...</p>';
-            modal.style.display = 'block';
-
-            closeModalBtn.onclick = () => {
-                modal.style.display = 'none';
-                content.innerHTML = ''; // Clear content when closing
-            };
-
-            try {
-                const response = await fetch(`/api/pedidos/${pedidoId}`); // API_URL is base, so prepend /api
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `Error fetching details: ${response.status}`);
-                }
-                const pedido = await response.json();
-
-                let detailsHtml = `
-                    <p><strong>Pedido ID:</strong> ${pedido.pedido_id}</p>
-                    <p><strong>Cliente:</strong> ${pedido.cliente_nombre || 'N/A'}</p>
-                    <p><strong>Habitación:</strong> ${pedido.habitacion_tipo || 'N/A'}</p>
-                    <p><strong>Fecha:</strong> ${new Date(pedido.fecha_pedido).toLocaleString()}</p>
-                    <p><strong>Estado:</strong> ${pedido.estado}</p>
-                    <p><strong>Total:</strong> $${parseFloat(pedido.total).toFixed(2)}</p>
-                    <h4>Items:</h4>
-                `;
-
-                if (pedido.items && pedido.items.length > 0) {
-                    detailsHtml += '<ul>';
-                    pedido.items.forEach(item => {
-                        detailsHtml += `
-                            <li>
-                                ${item.platillo_nombre} - Cantidad: ${item.cantidad}, 
-                                Precio Unitario: $${parseFloat(item.platillo_precio).toFixed(2)}, 
-                                Subtotal: $${parseFloat(item.subtotal).toFixed(2)}
-                            </li>
-                        `;
-                    });
-                    detailsHtml += '</ul>';
-                } else {
-                    detailsHtml += '<p>No items found for this order.</p>';
-                }
-                content.innerHTML = detailsHtml;
-
-            } catch (error) {
-                content.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
-            }
-        }
-
-        window.onload = fetchPedidos;
-    </script>
+    <script src="pedidos.js"></script>
 </body>
 </html>

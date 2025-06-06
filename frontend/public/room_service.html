@@ -27,7 +27,7 @@
     <script>
         // Configura la URL base de la API (ajusta si usas túnel)
         // Para pruebas en red local, usa la IP local:
-        const API_BASE_URL = 'http://192.168.1.106:3000/api';
+        const API_BASE_URL = 'http://192.168.1.9:3000/api';
 
         let reservaId = null;
         let platillosDisponibles = [];
@@ -168,6 +168,9 @@
         // Enviar pedido al backend
         document.getElementById('placeOrderBtn').onclick = async () => {
             if (!reservaId || pedido.length === 0) return;
+            const placeOrderBtn = document.getElementById('placeOrderBtn');
+            placeOrderBtn.disabled = true;
+            showMessage('Enviando pedido...');
             try {
                 const res = await fetch(`${API_BASE_URL}/pedidos`, {
                     method: 'POST',
@@ -180,16 +183,20 @@
                         }))
                     })
                 });
-                if (!res.ok) throw new Error('No se pudo enviar el pedido');
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.error || 'No se pudo enviar el pedido');
+                }
                 showMessage('¡Pedido realizado con éxito!');
-                // Limpia el pedido y redirige a pedidos.html después de 2s
                 pedido = [];
                 renderPedido();
-                setTimeout(() => {
-                    window.location.href = `pedidos.html?reserva_id=${reservaId}`;
-                }, 2000);
+                // Ya NO redirige a pedidos.html
+                // setTimeout(() => {
+                //     window.location.href = `pedidos.html?reserva_id=${reservaId}`;
+                // }, 2000);
             } catch (err) {
                 showMessage('Error al enviar el pedido: ' + err.message, true);
+                placeOrderBtn.disabled = false;
             }
         };
     </script>

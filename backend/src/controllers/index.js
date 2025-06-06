@@ -1,5 +1,6 @@
 const { query } = require('../db');
 const crypto = require('crypto');
+const db = require('../db');
 
 class IndexController {
     // Obtener todas las reservaciones con datos de cliente y habitación
@@ -97,9 +98,9 @@ class IndexController {
     // Obtener todos los platillos
     async getAllPlatillos(req, res) {
         try {
-            const result = await query(
-                `SELECT platillo_id, nombre, descripcion, precio, disponible
-                 FROM Platillo
+            const result = await db.query(
+                `SELECT platillo_id, nombre, descripcion, precio, disponible 
+                 FROM Platillo 
                  ORDER BY platillo_id ASC`
             );
             res.json(result.rows);
@@ -110,84 +111,90 @@ class IndexController {
 
     // Crear un nuevo pedido
     async createPedido(req, res) {
-        const { reserva_id, items } = req.body; // items: [{ platillo_id, cantidad }]
-        if (!reserva_id || !items || !Array.isArray(items) || items.length === 0) {
-            return res.status(400).json({ error: 'Datos incompletos o incorrectos para crear el pedido.' });
-        }
-
-        const client = await query('BEGIN'); // Iniciar transacción
+        const { reserva_id, items } = req.body;
+        const client = await db.getClient();
         let transactionStarted = false;
+
         try {
-            // Obtener precios de los platillos y verificar existencia
-            const platilloIds = items.map(item => item.platillo_id);
-            const platillosResult = await query(
-                `SELECT platillo_id, precio, disponible FROM Platillo WHERE platillo_id = ANY($1::int[])`,
-                [platilloIds]
+            await client.query('BEGIN');
+            transactionStarted = true;
+
+            // Inserta el pedido principal - ajustado para usar timestamp sin fecha_pedido
+            const pedidoResult = await client.query(
+                `INSERT INTO PedidoServicio (reserva_id, total, estado)
+                 VALUES ($1, 0, 'pendiente') 
+                 RETURNING pedido_id`,
+                [reserva_id]
             );
 
-            const platillosMap = new Map(platillosResult.rows.map(p => [p.platillo_id, p]));
+            const pedido_id = pedidoResult.rows[0].pedido_id;
+            let total = 0;
 
-            let totalPedido = 0;
+            // Procesa cada item
             for (const item of items) {
-                const platillo = platillosMap.get(item.platillo_id);
-                if (!platillo) {
-                    throw new Error(`Platillo con ID ${item.platillo_id} no encontrado.`);
-                }
-                if (!platillo.disponible) {
-                    throw new Error(`Platillo ${platillo.nombre} (ID: ${item.platillo_id}) no está disponible.`);
-                }
-                if (typeof item.cantidad !== 'number' || item.cantidad <= 0) {
-                    throw new Error(`Cantidad inválida para el platillo ID ${item.platillo_id}.`);
-                }
-                totalPedido += platillo.precio * item.cantidad;
-            }
+                const platilloResult = await client.query(
+                    'SELECT precio FROM Platillo WHERE platillo_id = $1',
+                    [item.platillo_id]
+                );
 
-            // Insertar en PedidoServicio
-            const pedidoResult = await query(
-                `INSERT INTO PedidoServicio (reserva_id, fecha_pedido, total, estado)
-                 VALUES ($1, CURRENT_TIMESTAMP, $2, 'pendiente') RETURNING *`,
-                [reserva_id, totalPedido]
-            );
-            const nuevoPedido = pedidoResult.rows[0];
-            const pedido_id = nuevoPedido.pedido_id;
+                if (platilloResult.rows.length === 0) {
+                    throw new Error(`Platillo ${item.platillo_id} no encontrado`);
+                }
 
-            // Insertar en DetallePedido
-            for (const item of items) {
-                const platillo = platillosMap.get(item.platillo_id);
-                const subtotal = platillo.precio * item.cantidad;
-                await query(
+                const precio = platilloResult.rows[0].precio;
+                const subtotal = precio * item.cantidad;
+                total += subtotal;
+
+                await client.query(
                     `INSERT INTO DetallePedido (pedido_id, platillo_id, cantidad, subtotal)
                      VALUES ($1, $2, $3, $4)`,
-                    [pedido_id, item.platillo_id, item.cantidad, subtotal]
+                     [pedido_id, item.platillo_id, item.cantidad, subtotal]
                 );
             }
 
-            await query('COMMIT'); // Confirmar transacción
-            res.status(201).json(nuevoPedido);
+            // Actualiza el total
+            await client.query(
+                'UPDATE PedidoServicio SET total = $1 WHERE pedido_id = $2',
+                [total, pedido_id]
+            );
+
+            await client.query('COMMIT');
+            res.status(201).json({
+                success: true,
+                pedido_id,
+                message: 'Pedido creado exitosamente'
+            });
+
         } catch (err) {
             if (transactionStarted) {
-                await query('ROLLBACK');
+                await client.query('ROLLBACK');
             }
-            res.status(500).json({ error: 'Error al crear pedido', details: err.message });
+            console.error('Error al crear pedido:', err);
+            res.status(500).json({ 
+                error: 'Error al crear pedido',
+                details: err.message 
+            });
+        } finally {
+            client.release();
         }
     }
 
     // Obtener todos los pedidos (para Admin)
     async getAllPedidos(req, res) {
         try {
-            const result = await query(
-                `SELECT ps.*,
+            const result = await db.query(
+                `SELECT ps.pedido_id, ps.reserva_id, ps.total, ps.estado,
                         c.nombre AS cliente_nombre,
-                        h.tipo AS habitacion_tipo, 
-                        r.fecha_entrada, r.fecha_salida
+                        h.tipo AS habitacion_tipo
                  FROM PedidoServicio ps
                  JOIN Reservacion r ON ps.reserva_id = r.reserva_id
                  JOIN Cliente c ON r.cliente_id = c.cliente_id
                  JOIN Habitacion h ON r.habitacion_id = h.habitacion_id
-                 ORDER BY ps.fecha_pedido DESC`
+                 ORDER BY ps.pedido_id DESC`
             );
             res.json(result.rows);
         } catch (err) {
+            console.error('Error al obtener pedidos:', err);
             res.status(500).json({ error: 'Error al obtener pedidos', details: err.message });
         }
     }
