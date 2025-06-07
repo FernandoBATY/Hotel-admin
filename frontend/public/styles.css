@@ -114,6 +114,7 @@ tbody tr:hover {
   box-shadow:
     0 22px 52px rgba(120, 120, 120, 0.75),
     inset 0 0 30px rgba(46, 196, 235, 0.35);
+  transform: none; /* Se elimina el aumento de tamaño al hacer hover */
 }
 
 /* Botones dentro tabla */
@@ -288,15 +289,19 @@ tbody tr {
 
 tbody tr:hover {
   background: #787878;
-  transform: scale(1.06);
+  color: #fffbfa;
   box-shadow:
     0 22px 52px rgba(120, 120, 120, 0.75),
     inset 0 0 30px rgba(46, 196, 235, 0.35);
-  color: #fffbfa;
+}
+
+/* Evitar el aumento de tamaño de las filas al pasar el cursor */
+tbody tr:hover {
+  transform: none; /* Elimina el efecto de aumento */
 }
 
 tbody td {
-   padding: 0.6rem 1rem;
+  padding: 0.6rem 1rem;
   vertical-align: middle;
   font-size: 0.9rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
@@ -334,7 +339,7 @@ td .btn::before {
   left: -65%;
   width: 180%;
   height: 280%;
-  background: linear-gradient(45deg, #2874fa, #0053b8); 
+  background: linear-gradient(45deg, #12213c, #08213e); 
   transform: translateY(-50%) rotate(25deg);
   transition: all 0.5s ease;
   filter: blur(20px);
@@ -349,7 +354,7 @@ td .btn:hover::before {
 td .btn:hover {
   background: #103a52; /* Azul más oscuro al pasar el cursor */
   color: #ffffff; /* Letras blancas en hover */
-  box-shadow: 0 0 22px #155385, 0 0 40px #00203e;
+  box-shadow: 0 0 22px #1b4cc9, 0 0 40px #0656a0;
   transform: scale(1.05);
 }
 
@@ -477,85 +482,4 @@ html {
   overflow: hidden;
   clip: rect(0 0 0 0);
   border: 0;
-}
-
-/* Estilos generales para la tabla reservationsTable */
-#reservationsTable {
-    width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 1rem;
-  background: #00203e;
-  border-radius: 25px;
-  overflow: hidden;
-  font-size: 0.8rem;
-  box-shadow:
-    0 18px 40px rgba(120, 120, 120, 0.35),
-    inset 0 0 40px rgba(234, 231, 203, 0.2);
-  animation: fadeInUp 1.3s ease forwards;
-  user-select: none;
-}
-
-/* Bordes y espaciado de las celdas */
-#reservationsTable th, #reservationsTable td {
-    padding: 6px 10px; /* Reducir el padding de las celdas */
-    font-size: 0.85rem; /* Reducir el tamaño de la fuente */
-}
-
-/* Títulos de las celdas */
-#reservationsTable th {
-    font-size: 1rem; /* Títulos más pequeños */
-    text-align: left;
-    background-color: #d0d0d0;
-    color: #000000;
-}
-
-/* Estilo de las celdas */
-#reservationsTable td {
-    color: #eaeaea;
-    background-color: #fffaea;
-    border-bottom: 1px solid #ddd;
-}
-
-/* Asegurar que la celda QR tenga el mismo tamaño */
-.qr_code_cell {
-    text-align: center;
-    width: 100px; /* Establecer un tamaño más pequeño para el QR */
-    height: 100px;
-}
-
-/* Ajustes para las filas en modo edición */
-#reservationsTable .editRow td {
-    padding: 6px 12px; /* Reducir padding en la fila de edición */
-}
-
-/* Botones dentro de la tabla */
-button.btn {
-    padding: 5px 10px; /* Reducir tamaño de los botones */
-    font-size: 0.85rem; /* Botones más pequeños */
-    cursor: pointer;
-}
-
-/* Botones pequeños */
-button.btn.small {
-    padding: 4px 8px; /* Botones aún más pequeños */
-    font-size: 0.75rem; /* Texto más pequeño */
-}
-
-/* Asegurar que la tabla se vea bien en dispositivos móviles */
-@media (max-width: 768px) {
-    #reservationsTable th, #reservationsTable td {
-        font-size: 0.75rem; /* Fuente más pequeña en móviles */
-        padding: 6px 10px; /* Reducir padding en dispositivos móviles */
-    }
-
-    button.btn {
-        padding: 4px 8px;
-        font-size: 0.75rem; /* Reducir tamaño de los botones en móviles */
-    }
-}
-
-@media (max-width: 480px) {
-    #reservationsTable th, #reservationsTable td {
-        padding: 4px 8px; /* Más reducción de padding en pantallas muy pequeñas */
-    }
 }
