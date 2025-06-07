@@ -90,7 +90,7 @@ thead th {
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: 1.2px;
-  color: #787878;
+  color: #000000;
   background: #eae7cb;
   border-radius: 25px;
   white-space: normal; /* permite texto multilínea en encabezado */
@@ -110,7 +110,6 @@ tbody td {
 
 tbody tr:hover {
   background: #787878;
-  transform: scale(1.03);
   color: #fffbfa;
   box-shadow:
     0 22px 52px rgba(120, 120, 120, 0.75),
@@ -123,9 +122,11 @@ td .btn {
   padding: 0.4rem 1rem;
   min-width: 80px;
   border-radius: 25px;
-  box-shadow:
-    0 0 14px #787878,
-    0 0 28px #00203e;
+  background: #2196f3; /* Azul fuerte */
+  color: #000000; /* Letras negras */
+  border: 1px solid #2196f3; /* Borde azul fuerte */
+  box-shadow: 0 0 14px #787878, 0 0 28px #042f58;
+  transition: all 0.3s ease;
 }
 
 /* Título principal */
@@ -136,7 +137,7 @@ h1 {
   text-align: center;
   color: #00203e;
   text-shadow:
-    0 0 15px #eae7cb,
+    0 0 15px #5e5858,
     0 0 25px #787878;
   user-select: none;
   line-height: 1.1;
@@ -249,10 +250,11 @@ h1 {
 table {
   width: 100%;
   border-collapse: separate;
-  border-spacing: 0 1.8rem;
+  border-spacing: 0 1rem;
   background: #00203e;
-  border-radius: 30px;
+  border-radius: 25px;
   overflow: hidden;
+  font-size: 0.8rem;
   box-shadow:
     0 18px 40px rgba(120, 120, 120, 0.35),
     inset 0 0 40px rgba(234, 231, 203, 0.2);
@@ -271,8 +273,8 @@ thead tr {
 }
 
 thead th {
-  padding: 1.6rem 2.2rem;
-  text-align: left;
+  padding: 0.8rem 1rem; /* Reduce el padding en los encabezados */
+  font-size: 0.9rem; /* Reduce el tamaño de la fuente */
 }
 
 tbody tr {
@@ -294,9 +296,9 @@ tbody tr:hover {
 }
 
 tbody td {
-  padding: 1.8rem 2.2rem;
+   padding: 0.6rem 1rem;
   vertical-align: middle;
-  font-size: 1.12rem;
+  font-size: 0.9rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
@@ -345,12 +347,10 @@ td .btn:hover::before {
 }
 
 td .btn:hover {
-  box-shadow:
-    0 0 32px #2874fa,
-    0 0 40px #12171d;
-  transform: scale(1.06); /* menos aumento */
-  background: linear-gradient(45deg, #08182b, #2874fa);
-  color: #000000;
+  background: #103a52; /* Azul más oscuro al pasar el cursor */
+  color: #ffffff; /* Letras blancas en hover */
+  box-shadow: 0 0 22px #155385, 0 0 40px #00203e;
+  transform: scale(1.05);
 }
 
 td .btn:active {
@@ -477,4 +477,85 @@ html {
   overflow: hidden;
   clip: rect(0 0 0 0);
   border: 0;
+}
+
+/* Estilos generales para la tabla reservationsTable */
+#reservationsTable {
+    width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 1rem;
+  background: #00203e;
+  border-radius: 25px;
+  overflow: hidden;
+  font-size: 0.8rem;
+  box-shadow:
+    0 18px 40px rgba(120, 120, 120, 0.35),
+    inset 0 0 40px rgba(234, 231, 203, 0.2);
+  animation: fadeInUp 1.3s ease forwards;
+  user-select: none;
+}
+
+/* Bordes y espaciado de las celdas */
+#reservationsTable th, #reservationsTable td {
+    padding: 6px 10px; /* Reducir el padding de las celdas */
+    font-size: 0.85rem; /* Reducir el tamaño de la fuente */
+}
+
+/* Títulos de las celdas */
+#reservationsTable th {
+    font-size: 1rem; /* Títulos más pequeños */
+    text-align: left;
+    background-color: #d0d0d0;
+    color: #000000;
+}
+
+/* Estilo de las celdas */
+#reservationsTable td {
+    color: #eaeaea;
+    background-color: #fffaea;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Asegurar que la celda QR tenga el mismo tamaño */
+.qr_code_cell {
+    text-align: center;
+    width: 100px; /* Establecer un tamaño más pequeño para el QR */
+    height: 100px;
+}
+
+/* Ajustes para las filas en modo edición */
+#reservationsTable .editRow td {
+    padding: 6px 12px; /* Reducir padding en la fila de edición */
+}
+
+/* Botones dentro de la tabla */
+button.btn {
+    padding: 5px 10px; /* Reducir tamaño de los botones */
+    font-size: 0.85rem; /* Botones más pequeños */
+    cursor: pointer;
+}
+
+/* Botones pequeños */
+button.btn.small {
+    padding: 4px 8px; /* Botones aún más pequeños */
+    font-size: 0.75rem; /* Texto más pequeño */
+}
+
+/* Asegurar que la tabla se vea bien en dispositivos móviles */
+@media (max-width: 768px) {
+    #reservationsTable th, #reservationsTable td {
+        font-size: 0.75rem; /* Fuente más pequeña en móviles */
+        padding: 6px 10px; /* Reducir padding en dispositivos móviles */
+    }
+
+    button.btn {
+        padding: 4px 8px;
+        font-size: 0.75rem; /* Reducir tamaño de los botones en móviles */
+    }
+}
+
+@media (max-width: 480px) {
+    #reservationsTable th, #reservationsTable td {
+        padding: 4px 8px; /* Más reducción de padding en pantallas muy pequeñas */
+    }
 }
