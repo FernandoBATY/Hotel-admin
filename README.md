@@ -1,87 +1,77 @@
-# Hotel Reservation Application
+Aplicación de Reservación de Hotel
+Este proyecto es una aplicación de reservación de hotel que consta de tres componentes principales: backend, frontend y base de datos. Cada componente está organizado en su propio directorio, lo que permite una clara separación de responsabilidades.
 
-This project is a hotel reservation application that consists of three main components: backend, frontend, and database. Each component is organized into its own directory, allowing for a clear separation of concerns.
+Estructura del Proyecto
+graphql
 
-## Project Structure
-
-```
 hotel-reservation-app
 ├── backend
 │   ├── src
-│   │   ├── app.js          # Entry point for the backend application
-│   │   ├── controllers     # Contains request handling logic
-│   │   ├── routes          # Defines API routes
-│   │   └── models          # Data models for the application
-│   ├── package.json        # Backend dependencies and scripts
-│   └── README.md           # Documentation for the backend
+│   │   ├── app.js          # Punto de entrada para la aplicación backend
+│   │   ├── controllers     # Contiene la lógica de manejo de solicitudes
+│   │   ├── routes          # Define las rutas de la API
+│   │   └── models          # Modelos de datos para la aplicación
+│   ├── package.json        # Dependencias y scripts del backend
+│   └── README.md           # Documentación del backend
 ├── frontend
 │   ├── src
-│   │   ├── App.js          # Main component for the frontend application
-│   │   ├── components       # Reusable components
-│   │   └── pages           # Application pages
-│   ├── package.json        # Frontend dependencies and scripts
-│   └── README.md           # Documentation for the frontend
+│   │   ├── App.js          # Componente principal para la aplicación frontend
+│   │   ├── components      # Componentes reutilizables
+│   │   └── pages           # Páginas de la aplicación
+│   ├── package.json        # Dependencias y scripts del frontend
+│   └── README.md           # Documentación del frontend
 ├── database
-│   ├── migrations          # SQL scripts for database schema
-│   │   └── init.sql       # Initialization script
-│   ├── seeders             # SQL scripts for seeding data
-│   │   └── seed.sql       # Seed data script
-│   └── README.md           # Documentation for the database
-└── README.md               # General documentation for the entire application
-```
+│   ├── migrations          # Scripts SQL para el esquema de la base de datos
+│   │   └── init.sql        # Script de inicialización
+│   ├── seeders             # Scripts SQL para poblar datos
+│   │   └── seed.sql        # Script de datos iniciales
+│   └── README.md           # Documentación de la base de datos
+└── README.md               # Documentación general de toda la aplicación
+Comenzando
+Para comenzar con la aplicación de reservación de hotel, sigue las instrucciones en los archivos README ubicados en el directorio de cada componente.
 
-## Getting Started
+Requisitos Previos
+Node.js (para el backend y el frontend)
 
-To get started with the hotel reservation application, follow the instructions in the respective README files located in each component's directory.
+Una base de datos SQL (para el componente de base de datos)
 
-### Prerequisites
+Instalación
+Clona el repositorio:
 
-- Node.js (for backend and frontend)
-- A SQL database (for the database component)
+bash
 
-### Installation
+git clone <repository-url>
+cd hotel-reservation-app
+Configura el backend:
 
-1. Clone the repository:
-   ```
-   git clone <repository-url>
-   cd hotel-reservation-app
-   ```
+Navega al directorio backend e instala las dependencias:
 
-2. Set up the backend:
-   - Navigate to the `backend` directory and install dependencies:
-     ```
-     cd backend
-     npm install
-     ```
+bash
 
-3. Set up the frontend:
-   - Navigate to the `frontend` directory and install dependencies:
-     ```
-     cd frontend
-     npm install
-     ```
+cd backend
+npm install
+Configura el frontend:
 
-4. Set up the database:
-   - Run the SQL scripts in the `database/migrations` and `database/seeders` directories to initialize and seed the database.
+Navega al directorio frontend e instala las dependencias:
 
-### Running the Application
+bash
 
-- Start the backend server:
-  ```
-  cd backend
-  npm start
-  ```
+cd frontend
+npm install
+Configura la base de datos:
 
-- Start the frontend application:
-  ```
-  cd frontend
-  npm start
-  ```
+Ejecuta los scripts SQL en los directorios database/migrations y database/seeders para inicializar y poblar la base de datos.
 
-## Contributing
+Ejecutando la Aplicación
+Inicia el servidor backend:
 
-Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
+bash
 
-## License
+cd backend
+npm start
+Inicia la aplicación frontend:
 
-This project is licensed under the MIT License.
+bash
+
+cd frontend
+npm start
